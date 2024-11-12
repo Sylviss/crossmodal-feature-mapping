@@ -8,6 +8,7 @@ def organized_pc_to_unorganized_pc(organized_pc):
 
 def read_tiff_organized_pc(path):
     tiff_img = tiff.imread(path)
+    # print(tiff_img.shape)
     return tiff_img
 
 

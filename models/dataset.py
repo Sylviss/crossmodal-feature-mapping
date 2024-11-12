@@ -171,7 +171,8 @@ def get_data_loader(split, class_name, dataset_path, img_size = 224, batch_size 
         dataset = TrainValDataset(split = "validation", class_name = class_name, img_size = img_size, dataset_path = dataset_path)
     elif split in ['test']:
         dataset = TestDataset(class_name = class_name, img_size = img_size, dataset_path = dataset_path)
-
+    else:
+        dataset = "HEHE"
     data_loader = DataLoader(dataset = dataset, batch_size = batch_size, shuffle = shuffle, 
                              num_workers = 1, drop_last = False, pin_memory = True)
     

@@ -25,10 +25,8 @@ def set_seeds(sid=42):
 
 
 def infer_CFM(args):
-
     set_seeds()
     device = "cuda" if torch.cuda.is_available() else "cpu"
-
     # Dataloaders.
     test_loader = get_data_loader("test", class_name = args.class_name, img_size = 224, dataset_path = args.dataset_path)
 
@@ -42,6 +40,9 @@ def infer_CFM(args):
     CFM_2Dto3D_path = rf'{args.checkpoint_folder}/{args.class_name}/CFM_2Dto3D_{args.class_name}_{args.epochs_no}ep_{args.batch_size}bs.pth'
     CFM_3Dto2D_path = rf'{args.checkpoint_folder}/{args.class_name}/CFM_3Dto2D_{args.class_name}_{args.epochs_no}ep_{args.batch_size}bs.pth'
 
+    print(CFM_2Dto3D_path)
+    print(CFM_3Dto2D_path)
+    
     CFM_2Dto3D.load_state_dict(torch.load(CFM_2Dto3D_path))
     CFM_3Dto2D.load_state_dict(torch.load(CFM_3Dto2D_path))
 
@@ -64,8 +65,9 @@ def infer_CFM(args):
 
     # * Return (img, resized_organized_pc, resized_depth_map_3channel), gt[:1], label, rgb_path
     for (rgb, pc, depth), gt, label, rgb_path in tqdm(test_loader, desc = f'Extracting feature from class: {args.class_name}.'):
-
-        rgb, pc, depth = rgb.to(device), pc.to(device), depth.to(device)
+        # print(pc.shape,depth.shape,rgb.shape)
+        
+        rgb, pc, depth, gt= rgb.to(device), pc.to(device), depth.to(device), gt.to(device)
 
         with torch.no_grad():
             rgb_patch, xyz_patch = feature_extractor.get_features_maps(rgb, pc)
@@ -89,15 +91,18 @@ def infer_CFM(args):
             # Repeated box filters to approximate a Gaussian blur.
             cos_comb = cos_comb.reshape(1, 1, 224, 224)
 
-            cos_comb = torch.nn.functional.conv2d(input = cos_comb, padding = pad_l, weight = weight_l) 
-            cos_comb = torch.nn.functional.conv2d(input = cos_comb, padding = pad_l, weight = weight_l) 
-            cos_comb = torch.nn.functional.conv2d(input = cos_comb, padding = pad_l, weight = weight_l) 
-            cos_comb = torch.nn.functional.conv2d(input = cos_comb, padding = pad_l, weight = weight_l)
-            cos_comb = torch.nn.functional.conv2d(input = cos_comb, padding = pad_l, weight = weight_l)
-        
-            cos_comb = torch.nn.functional.conv2d(input = cos_comb, padding = pad_u, weight = weight_u) 
-            cos_comb = torch.nn.functional.conv2d(input = cos_comb, padding = pad_u, weight = weight_u) 
-            cos_comb = torch.nn.functional.conv2d(input = cos_comb, padding = pad_u, weight = weight_u) 
+            weight_l = weight_l.to(device)
+            weight_u = weight_u.to(device)
+            
+            cos_comb = torch.nn.functional.conv2d(cos_comb, weight_l, padding = pad_l) 
+            cos_comb = torch.nn.functional.conv2d(cos_comb, weight_l, padding = pad_l) 
+            cos_comb = torch.nn.functional.conv2d(cos_comb, weight_l, padding = pad_l) 
+            cos_comb = torch.nn.functional.conv2d(cos_comb, weight_l, padding = pad_l) 
+            cos_comb = torch.nn.functional.conv2d(cos_comb, weight_l, padding = pad_l) 
+
+            cos_comb = torch.nn.functional.conv2d(cos_comb, weight_u, padding = pad_u) 
+            cos_comb = torch.nn.functional.conv2d(cos_comb, weight_u, padding = pad_u) 
+            cos_comb = torch.nn.functional.conv2d(cos_comb, weight_u, padding = pad_u) 
             
             cos_comb = cos_comb.reshape(224,224)
             
@@ -115,8 +120,8 @@ def infer_CFM(args):
 
             if args.produce_qualitatives:
 
-                defect_class_str = rgb_path[0].split('/')[-3]
-                image_name_str = rgb_path[0].split('/')[-1]
+                defect_class_str = rgb_path[0].split('\\')[-3]
+                image_name_str = rgb_path[0].split('\\')[-1]
 
                 save_path = f'{args.qualitative_folder}/{args.class_name}_{args.epochs_no}ep_{args.batch_size}bs/{defect_class_str}'
 
@@ -143,13 +148,13 @@ def infer_CFM(args):
                 axs[0, 2].imshow(depth.squeeze().permute(1,2,0).mean(axis=-1).cpu().detach().numpy())
                 axs[0, 2].set_title('Depth')
 
-                axs[1, 0].imshow(cos_3d.cpu().detach().numpy(), cmap=plt.cm.jet)
+                axs[1, 0].imshow(cos_3d.cpu().detach().numpy(), cmap="jet")
                 axs[1, 0].set_title('3D Cosine Similarity')
 
-                axs[1, 1].imshow(cos_2d.cpu().detach().numpy(), cmap=plt.cm.jet)
+                axs[1, 1].imshow(cos_2d.cpu().detach().numpy(), cmap="jet")
                 axs[1, 1].set_title('2D Cosine Similarity')
 
-                axs[1, 2].imshow(cos_comb.cpu().detach().numpy(), cmap=plt.cm.jet)
+                axs[1, 2].imshow(cos_comb.cpu().detach().numpy(), cmap="jet")
                 axs[1, 2].set_title('Combined Cosine Similarity')
 
                 # Remove ticks and labels from all subplots
@@ -161,12 +166,77 @@ def infer_CFM(args):
 
                 # Adjust the layout and spacing
                 plt.tight_layout()
-
+                print(os.path.join(save_path, image_name_str))
                 plt.savefig(os.path.join(save_path, image_name_str), dpi = 256)
 
                 if args.visualize_plot:
                     plt.show()
 
+    
+    
+    
+    
+    
+    # def plot_density_maps(rgb_images, gts, predictions):
+    #     # Access the last ground truth, prediction, and RGB image
+    #     last_rgb = rgb_images.squeeze()  # This should now be (C, height, width)
+    #     last_gt = gts[-1]  # shape: (height, width)
+    #     last_pred = predictions[-1]  # shape: (height, width)
+
+    #     # Set up the figure and axes
+    #     fig, axs = plt.subplots(1, 3, figsize=(18, 6))
+
+    #     # Plot RGB Image
+    #     axs[0].imshow(last_rgb.permute(1, 2, 0).cpu().detach().numpy())  # Change from (C, H, W) to (H, W, C)
+    #     axs[0].set_title('RGB Image')
+    #     axs[0].axis('off')  # Turn off axis
+
+    #     # Plot Ground Truth
+    #     axs[1].imshow(last_gt, cmap='jet', interpolation='nearest')
+    #     axs[1].set_title('Ground Truth Density Map')
+    #     axs[1].axis('off')  # Turn off axis
+
+    #     # Plot Prediction
+    #     axs[2].imshow(last_pred, cmap='jet', interpolation='nearest')
+    #     axs[2].set_title('Prediction Density Map')
+    #     axs[2].axis('off')  # Turn off axis
+
+    #     # Optionally add colorbars for the density maps
+    #     plt.colorbar(axs[1].imshow(last_gt, cmap='jet', interpolation='nearest'), ax=axs[1], fraction=0.046, pad=0.04)
+    #     plt.colorbar(axs[2].imshow(last_pred, cmap='jet', interpolation='nearest'), ax=axs[2], fraction=0.046, pad=0.04)
+
+    #     plt.tight_layout()
+    #     plt.show()
+
+    # # Call the function with rgb_images, gts, and predictions
+    # # Assuming rgb_images is the list containing RGB images
+    # plot_density_maps(rgb, gts, predictions)
+    
+    
+    # fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+
+    # # Plot the first anomaly map (cos2d)
+    # axs[0].imshow(cos_2d.cpu().numpy(), cmap='jet', interpolation='nearest')
+    # axs[0].set_title('2D Anomaly Map (cos2d)')
+    # axs[0].axis('off')  # Hide the axes
+
+    # # Plot the second anomaly map (cos3d)
+    # axs[1].imshow(cos_3d.cpu().numpy(), cmap='jet', interpolation='nearest')
+    # axs[1].set_title('3D Anomaly Map (cos3d)')
+    # axs[1].axis('off')  # Hide the axes
+
+    # plt.colorbar(axs[0].imshow(cos_2d.cpu().numpy(), cmap='jet', interpolation='nearest'), ax=axs[0], fraction=0.046, pad=0.04)
+    # plt.colorbar(axs[1].imshow(cos_3d.cpu().numpy(), cmap='jet', interpolation='nearest'), ax=axs[1], fraction=0.046, pad=0.04)
+
+    # # Show the plots
+    # plt.tight_layout()
+    # plt.show()
+        
+    
+    
+    
+    
+    
     # Calculate AD&S metrics.
     au_pros, _ = calculate_au_pro(gts, predictions)
     pixel_rocauc = roc_auc_score(np.stack(pixel_labels), np.stack(pixel_preds))

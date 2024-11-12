@@ -141,7 +141,7 @@ if __name__ == '__main__':
         preprocess_pc(path)
         processed_files += 1
         if processed_files % 50 == 0:
-            print(f"Processed {processed_files} tiff files...")
+            print(f"Processed {processed_files} tiff files...") 
 
 
 

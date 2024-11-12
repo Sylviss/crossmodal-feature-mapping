@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import timm
 from timm.models.layers import DropPath
-from pointnet2_ops import pointnet2_utils
+from pytorch3d import ops
 
 class FeatureExtractors(torch.nn.Module):
     def __init__(self, device, 
@@ -55,8 +55,11 @@ def fps(data, number):
         data B N 3
         number int
     '''
-    fps_idx = pointnet2_utils.furthest_point_sample(data, number)
-    fps_data = pointnet2_utils.gather_operation(data.transpose(1, 2).contiguous(), fps_idx).transpose(1, 2).contiguous()
+    fps_data,fps_idx = ops.sample_farthest_points(data,K=number)
+    # fps_idx = pointnet2_utils.furthest_point_sample(data, number)
+    # fps_data = torch.gather(data, 1, fps_idx.unsqueeze(-1).expand(-1, -1, data.size(-1)))
+    # fps_data = pointnet2_utils.gather_operation(data.transpose(1, 2).contiguous(), fps_idx).transpose(1, 2).contiguous()
+    # print(fps_data.shape,data.shape,number)
     return fps_data, fps_idx
 
 
@@ -95,7 +98,6 @@ class Group(nn.Module):
             output: B G M 3
             center : B G 3
         '''
-
         batch_size, num_points, _ = xyz.shape
         # fps the centers out
         center, center_idx = fps(xyz.contiguous(), self.num_group)  # B G 3
@@ -351,7 +353,6 @@ class PointTransformer(nn.Module):
             B, C, N = pts.shape
             pts = pts.transpose(-1, -2)  # B N 3
             # divide the point clo  ud in the same form. This is important
-
             neighborhood, center, ori_idx, center_idx = self.group_divider(pts)
             group_input_tokens = self.encoder(neighborhood)  # B G N
 
