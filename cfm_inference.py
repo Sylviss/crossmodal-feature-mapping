@@ -71,7 +71,7 @@ def infer_CFM(args):
 
         with torch.no_grad():
             rgb_patch, xyz_patch = feature_extractor.get_features_maps(rgb, pc)
-        
+
             rgb_feat_pred = CFM_3Dto2D(xyz_patch)
             xyz_feat_pred = CFM_2Dto3D(rgb_patch)
 
@@ -171,66 +171,65 @@ def infer_CFM(args):
 
                 if args.visualize_plot:
                     plt.show()
-
     
     
     
     
     
-    # def plot_density_maps(rgb_images, gts, predictions):
-    #     # Access the last ground truth, prediction, and RGB image
-    #     last_rgb = rgb_images.squeeze()  # This should now be (C, height, width)
-    #     last_gt = gts[-1]  # shape: (height, width)
-    #     last_pred = predictions[-1]  # shape: (height, width)
+    def plot_density_maps(rgb_images, gts, predictions):
+        # Access the last ground truth, prediction, and RGB image
+        last_rgb = rgb_images.squeeze()  # This should now be (C, height, width)
+        last_gt = gts[-1]  # shape: (height, width)
+        last_pred = predictions[-1]  # shape: (height, width)
 
-    #     # Set up the figure and axes
-    #     fig, axs = plt.subplots(1, 3, figsize=(18, 6))
+        # Set up the figure and axes
+        fig, axs = plt.subplots(1, 3, figsize=(18, 6))
 
-    #     # Plot RGB Image
-    #     axs[0].imshow(last_rgb.permute(1, 2, 0).cpu().detach().numpy())  # Change from (C, H, W) to (H, W, C)
-    #     axs[0].set_title('RGB Image')
-    #     axs[0].axis('off')  # Turn off axis
+        # Plot RGB Image
+        axs[0].imshow(last_rgb.permute(1, 2, 0).cpu().detach().numpy())  # Change from (C, H, W) to (H, W, C)
+        axs[0].set_title('RGB Image')
+        axs[0].axis('off')  # Turn off axis
 
-    #     # Plot Ground Truth
-    #     axs[1].imshow(last_gt, cmap='jet', interpolation='nearest')
-    #     axs[1].set_title('Ground Truth Density Map')
-    #     axs[1].axis('off')  # Turn off axis
+        # Plot Ground Truth
+        axs[1].imshow(last_gt, cmap='jet', interpolation='nearest')
+        axs[1].set_title('Ground Truth Density Map')
+        axs[1].axis('off')  # Turn off axis
 
-    #     # Plot Prediction
-    #     axs[2].imshow(last_pred, cmap='jet', interpolation='nearest')
-    #     axs[2].set_title('Prediction Density Map')
-    #     axs[2].axis('off')  # Turn off axis
+        # Plot Prediction
+        axs[2].imshow(last_pred, cmap='jet', interpolation='nearest')
+        axs[2].set_title('Prediction Density Map')
+        axs[2].axis('off')  # Turn off axis
 
-    #     # Optionally add colorbars for the density maps
-    #     plt.colorbar(axs[1].imshow(last_gt, cmap='jet', interpolation='nearest'), ax=axs[1], fraction=0.046, pad=0.04)
-    #     plt.colorbar(axs[2].imshow(last_pred, cmap='jet', interpolation='nearest'), ax=axs[2], fraction=0.046, pad=0.04)
+        # Optionally add colorbars for the density maps
+        plt.colorbar(axs[1].imshow(last_gt, cmap='jet', interpolation='nearest'), ax=axs[1], fraction=0.046, pad=0.04)
+        plt.colorbar(axs[2].imshow(last_pred, cmap='jet', interpolation='nearest'), ax=axs[2], fraction=0.046, pad=0.04)
 
-    #     plt.tight_layout()
-    #     plt.show()
+        plt.tight_layout()
+        plt.show()
 
-    # # Call the function with rgb_images, gts, and predictions
-    # # Assuming rgb_images is the list containing RGB images
-    # plot_density_maps(rgb, gts, predictions)
+    # Call the function with rgb_images, gts, and predictions
+    # Assuming rgb_images is the list containing RGB images
+    plot_density_maps(rgb, gts, predictions)
     
     
-    # fig, axs = plt.subplots(1, 2, figsize=(12, 6))
+    fig, axs = plt.subplots(1, 2, figsize=(12, 6))
 
-    # # Plot the first anomaly map (cos2d)
-    # axs[0].imshow(cos_2d.cpu().numpy(), cmap='jet', interpolation='nearest')
-    # axs[0].set_title('2D Anomaly Map (cos2d)')
-    # axs[0].axis('off')  # Hide the axes
+    # Plot the first anomaly map (cos2d)
+    axs[0].imshow(cos_2d.cpu().numpy(), cmap='jet', interpolation='nearest')
+    axs[0].set_title('2D Anomaly Map (cos2d)')
+    axs[0].axis('off')  # Hide the axes
 
-    # # Plot the second anomaly map (cos3d)
-    # axs[1].imshow(cos_3d.cpu().numpy(), cmap='jet', interpolation='nearest')
-    # axs[1].set_title('3D Anomaly Map (cos3d)')
-    # axs[1].axis('off')  # Hide the axes
+    # Plot the second anomaly map (cos3d)
+    axs[1].imshow(cos_3d.cpu().numpy(), cmap='jet', interpolation='nearest')
+    axs[1].set_title('3D Anomaly Map (cos3d)')
+    axs[1].axis('off')  # Hide the axes
 
-    # plt.colorbar(axs[0].imshow(cos_2d.cpu().numpy(), cmap='jet', interpolation='nearest'), ax=axs[0], fraction=0.046, pad=0.04)
-    # plt.colorbar(axs[1].imshow(cos_3d.cpu().numpy(), cmap='jet', interpolation='nearest'), ax=axs[1], fraction=0.046, pad=0.04)
+    plt.colorbar(axs[0].imshow(cos_2d.cpu().numpy(), cmap='jet', interpolation='nearest'), ax=axs[0], fraction=0.046, pad=0.04)
+    plt.colorbar(axs[1].imshow(cos_3d.cpu().numpy(), cmap='jet', interpolation='nearest'), ax=axs[1], fraction=0.046, pad=0.04)
 
-    # # Show the plots
-    # plt.tight_layout()
-    # plt.show()
+    # Show the plots
+    plt.tight_layout()
+    plt.show()
         
     
     

@@ -58,3 +58,29 @@ class FeatureProjectionMLP_big(torch.nn.Module):
         x = self.output(x)
 
         return x
+
+
+# class FeatureProjectionEncoder(torch.nn.Module):
+#     def __init__(self, in_features = None, out_features = None, act_layer = torch.nn.GELU):
+#         super().__init__()
+        
+#         self.act_fcn = act_layer()
+
+#     def forward(self, x):
+#         x = self.input(x)
+#         x = self.act_fcn(x)
+
+#         x = self.projection_a(x)
+#         x = self.act_fcn(x)
+#         x = self.projection_b(x)
+#         x = self.act_fcn(x)
+#         x = self.projection_c(x)
+#         x = self.act_fcn(x)
+#         x = self.projection_d(x)
+#         x = self.act_fcn(x)
+#         x = self.projection_e(x)
+#         x = self.act_fcn(x)
+
+#         x = self.output(x)
+
+#         return x

@@ -25,11 +25,12 @@ class FeatureExtractors(torch.nn.Module):
         # ! Use only the first k blocks.
         self.rgb_backbone.blocks = torch.nn.Sequential(*self.rgb_backbone.blocks[:layers_keep]) # Remove Block(s) from 5 to 11.
 
-        ## XYZ backbone
-        self.xyz_backbone = PointTransformer(group_size = group_size, num_group = num_group)
-        self.xyz_backbone.load_model_from_ckpt("checkpoints/feature_extractors/pointmae_pretrain.pth")
-        # ! Use only the first k blocks.
-        self.xyz_backbone.blocks.blocks = torch.nn.Sequential(*self.xyz_backbone.blocks.blocks[:layers_keep]) # Remove Block(s) from 5 to 11.
+        # ## XYZ backbone
+        # self.xyz_backbone = PointTransformer(group_size = group_size, num_group = num_group)
+        # self.xyz_backbone.load_model_from_ckpt("checkpoints/feature_extractors/pointmae_pretrain.pth")
+        # # ! Use only the first k blocks.
+        # self.xyz_backbone.blocks.blocks = torch.nn.Sequential(*self.xyz_backbone.blocks.blocks[:layers_keep]) # Remove Block(s) from 5 to 11.
+        
 
 
     def forward_rgb_features(self, x):
@@ -45,9 +46,10 @@ class FeatureExtractors(torch.nn.Module):
 
     def forward(self, rgb, xyz):
         rgb_features = self.forward_rgb_features(rgb)
-        xyz_features, center, ori_idx, center_idx = self.xyz_backbone(xyz)
+        # xyz_features, center, ori_idx, center_idx = self.xyz_backbone(xyz)
+        xyz_features = self.forward_rgb_features(xyz)
 
-        return rgb_features, xyz_features, center, ori_idx, center_idx
+        return rgb_features, xyz_features
 
 
 def fps(data, number):
